@@ -5,7 +5,7 @@
 .auth-card,
 .modal-content,
 .scanner-modal {
-  background: var(--surface-solid); /* White glass */
+  background: var(--surface-solid); /* White glass */ 
   color: var(--text-on-glass); /* Dark text */
 }
 
