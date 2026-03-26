@@ -170,7 +170,7 @@ input::placeholder {
 }
 
 html {
-  background: url('/assets/attend.jpg');
+  background: url('/assets/gradient-bg.webp');
   background-attachment: fixed;
   background-size: cover;
   background-repeat: no-repeat;
@@ -183,7 +183,7 @@ body {
   background: transparent;
   color: var(--dark-text);
   min-height: 70px;
-  line-height: 1.2;
+  line-height: -1;
   font-weight: 400;
 }
 
