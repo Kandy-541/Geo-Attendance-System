@@ -172,7 +172,7 @@ input::placeholder {
 .auth-img{
   display: block;
   padding-top: 20px;
-  padding-left: 500px;
+  padding-right: 500px;
 }
 
 html {
