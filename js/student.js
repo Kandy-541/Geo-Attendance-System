@@ -496,6 +496,7 @@ async function markAttendance(user, userProfile, method) {
       sessionId: currentSession.id,
       studentId: user.uid,
       name: userProfile.name,
+      speciality: userProfile.speciality,
       level: userProfile.level,
       timestamp: serverTimestamp(),
       method: method
