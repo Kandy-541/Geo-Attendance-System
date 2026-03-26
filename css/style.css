@@ -170,9 +170,9 @@ input::placeholder {
 }
 
 .auth-img{
-  display: block;
+  /* display: block; */
   padding-top: 20px;
-  padding-right: 1500px;
+  padding-leftt: 1500px;
 }
 
 html {
