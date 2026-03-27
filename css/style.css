@@ -173,6 +173,7 @@ input::placeholder {
   /* display: block; */
   padding-top: 20px;
   padding-leftt: 1500px;
+  border-radius: 50%;
 }
 
 html {
