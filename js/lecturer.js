@@ -276,11 +276,12 @@ async function viewSessionDetails(session) {
         const row = document.createElement('tr');
         const timestamp = record.timestamp?.toDate?.() || new Date();
         row.innerHTML = `
-          <td>${record.name}</td>
-          <td>${record.level}</td>
-          <td>${record.method}</td>
-          <td>${timestamp.toLocaleTimeString()}</td>
-        `;
+  <td>${attendance.name}</td>
+  <td>${attendance.level}</td>
+  <td>${attendance.speciality || '-'}</td>
+  <td>${attendance.method}</td>
+  <td>${attendance.timestamp.toLocaleTimeString()}</td>
+`;
         attendanceList.appendChild(row);
       });
     }
@@ -718,11 +719,12 @@ function displayAttendanceList(attendanceData) {
   attendanceData.forEach((attendance) => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${attendance.name}</td>
-      <td>${attendance.level}</td>
-      <td>${attendance.method}</td>
-      <td>${attendance.timestamp.toLocaleTimeString()}</td>
-    `;
+  <td>${record.name}</td>
+  <td>${record.level}</td>
+  <td>${record.speciality || '-'}</td>
+  <td>${record.method}</td>
+  <td>${timestamp.toLocaleTimeString()}</td>
+`;
     attendanceList.appendChild(row);
   });
 }
