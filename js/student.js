@@ -21,7 +21,7 @@ let lastSessionId = null;
 let studentInitialized = false;
 let currentGeolocationTimeout = null;
 let geoRetryCount = 0;
-const MAX_GEO_RETRIES = 5;
+const MAX_GEO_RETRIES = 12;
 let isMarkingAttendance = false;
 
 // Device and browser detection
@@ -205,14 +205,22 @@ function startGeolocationPolling(user, userProfile) {
   console.log('[Geolocation] User clicked START ATTENDANCE - requesting geolocation permission');
   updateGeoStatus('Requesting location...');
 
-  // FAIL-SAFE UI EXIT - Add timeout protection to prevent infinite spinner
+  // FAIL-SAFE UI EXIT - Add timeout protection to prevent infinite spinner( stops polling too, so retries don't keep burning)
   setTimeout(() => {
-    if (!attendanceRecorded) {
-      hideSpinner();
-      updateGeoStatus("Unable to confirm attendance. Try again.");
-      console.log("[ATTENDANCE DEBUG] Fail-safe timeout triggered - spinner hidden.");
+  if (!attendanceRecorded) {
+    stopGeoPolling();
+    hideSpinner();
+    updateGeoStatus("Unable to confirm attendance. Tap the button to try again.");
+    // Re-show the start button so student can retry
+    const startBtn = document.getElementById('startAttendanceBtn');
+    if (startBtn) {
+      startBtn.disabled = false;
+      startBtn.textContent = '📍 Start Attendance (Request Location)';
+      startBtn.style.display = 'block';
     }
-  }, 15000);
+    geoRetryCount = 0; // Reset so next attempt gets full retries
+  }
+}, 15000);
 
   // Request permission explicitly (especially for iOS) - triggered by user click
   requestGeolocationPermissionWithFallback(user, userProfile, isRestrictedBrowser);
