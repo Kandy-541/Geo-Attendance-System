@@ -24,7 +24,6 @@ export async function registerUser(email, password, name, role, speciality, leve
     // Debug logs
     console.log("[DEBUG] Auth.currentUser UID:", auth.currentUser?.uid);
     console.log("[DEBUG] User UID from credential:", user.uid);
-    console.log("[DEBUG] Project IDs:", auth.app.options.projectId, db.app.options.projectId);
 
     // Force ID token generation and synchronization
     await user.getIdToken(true);
@@ -40,22 +39,24 @@ export async function registerUser(email, password, name, role, speciality, leve
       role: role,
       name: name,
       email: email,
-      createdAt: serverTimestamp()  // Use Firestore serverTimestamp instead of new Date()
+      createdAt: serverTimestamp()
     };
 
-    if (role === 'student' && level) {
-      userData.level = level;
+    // CRITICAL FIX: Add speciality and level for students
+    if (role === 'student') {
+      if (speciality) {
+        userData.speciality = speciality;
+      }
+      if (level) {
+        userData.level = level;
+      }
     }
 
     console.log("SIGNUP PROFILE WRITE ATTEMPT", {
-      uid: authenticatedUser.uid,  // Use authenticated user UID
-      authUid: authenticatedUser.uid,
+      uid: authenticatedUser.uid,
       role: userData.role,
-      roleType: typeof userData.role,
       email: userData.email,
-      emailType: typeof userData.email,
       name: userData.name,
-      nameType: typeof userData.name,
       speciality: userData.speciality,
       level: userData.level,
       data: userData
@@ -108,7 +109,7 @@ export async function getUserProfile(uid) {
   }
 }
 
-// Update user profile (for first login if needed)
+// Update user profile
 export async function updateUserProfile(uid, data) {
   try {
     await setDoc(doc(db, 'users', uid), data, { merge: true });
@@ -118,7 +119,7 @@ export async function updateUserProfile(uid, data) {
   }
 }
 
-// Verify that user's role matches the selected role (role gateway protection)
+// Verify role match
 export async function verifyRoleMatch(uid, selectedRole) {
   try {
     const userProfile = await getUserProfile(uid);
@@ -131,6 +132,7 @@ export async function verifyRoleMatch(uid, selectedRole) {
     throw error;
   }
 }
-// Temporary for debugging in browser console
+
+// Temporary for debugging
 window.debugAuth = auth;
 window.debugDB = db;
