@@ -42,8 +42,29 @@ export function displayQRCodeWithText(sessionId, elementId, displayText = null) 
 
   container.appendChild(wrapper);
 
-  // Generate QR code
-  generateQRCode(sessionId, qrContainer.id);
+  // Generate initial QR code
+  generateDynamicQRCode(sessionId, qrContainer.id);
+}
+
+// Function to generate QR code with dynamic content
+export function generateDynamicQRCode(sessionId, elementId) {
+  // Create unique QR value using sessionId and current timestamp
+  const qrText = `${sessionId}-${Date.now()}`;
+  console.log('[QR] Generating dynamic QR code:', qrText);
+
+  // Clear existing QR code
+  const element = document.getElementById(elementId);
+  element.innerHTML = '';
+
+  // Create QR code
+  new QRCode(element, {
+    text: qrText,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
 }
 
 // Utility to download QR code as image

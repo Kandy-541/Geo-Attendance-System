@@ -1498,6 +1498,153 @@ input::placeholder {
     padding: 16px;
     gap: 10px;
   }
+
+/* ===================== */
+/* Credential Reminder Modal */
+/* ===================== */
+
+.credential-modal {
+  max-width: 500px;
+  text-align: center;
+}
+
+.credential-modal .modal-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.credential-modal .modal-header h2 {
+  color: var(--success-color);
+  font-size: 24px;
+  margin: 0;
+}
+
+.modal-subtitle {
+  color: var(--medium-text);
+  font-size: 14px;
+  margin: 8px 0 0 0;
+}
+
+.credential-info {
+  padding: 24px;
+  background: var(--light-bg);
+  margin: 0 20px;
+  border-radius: 12px;
+}
+
+.credential-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.credential-item:last-child {
+  border-bottom: none;
+}
+
+.credential-item label {
+  font-weight: 600;
+  color: var(--dark-text);
+  font-size: 14px;
+}
+
+.credential-value {
+  font-family: 'Courier New', monospace;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+  color: var(--dark-text);
+  min-width: 200px;
+  text-align: left;
+  word-break: break-all;
+}
+
+.credential-warning {
+  padding: 16px 20px;
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 4px solid var(--warning-color);
+  margin: 0 20px;
+  border-radius: 8px;
+}
+
+.credential-warning p {
+  color: var(--dark-text);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.modal-actions .btn {
+  min-width: 140px;
+}
+
+.auto-redirect {
+  padding: 12px 20px;
+  background: var(--secondary-color);
+  color: var(--primary-color);
+  font-size: 13px;
+  border-radius: 0 0 12px 12px;
+}
+
+.auto-redirect span {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+/* Forgot Credentials Link */
+.forgot-credentials {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.forgot-credentials a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.forgot-credentials a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Credential Modal */
+@media (max-width: 480px) {
+  .credential-modal {
+    margin: 10px;
+    max-width: calc(100vw - 20px);
+  }
+  
+  .credential-info {
+    margin: 0 10px;
+    padding: 16px;
+  }
+  
+  .credential-value {
+    min-width: 150px;
+    font-size: 13px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    padding: 16px;
+  }
+  
+  .modal-actions .btn {
+    min-width: auto;
+  }
+}
 }
 
 /* Mobile (480px and down) */

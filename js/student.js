@@ -761,6 +761,10 @@ async function handleQRCodeScanned(decodedText) {
   console.log('[QR] Handling scanned code:', decodedText);
   console.log('[QR] Current session ID:', currentSession?.id);
   
+  // Extract session ID from dynamic QR code (format: sessionId-timestamp)
+  const scannedSessionId = decodedText.split('-')[0];
+  console.log('[QR] Extracted session ID from QR:', scannedSessionId);
+  
   // Validate that code matches current session
   if (!currentSession) {
     console.error('[QR] ERROR: currentSession is null');
@@ -768,8 +772,8 @@ async function handleQRCodeScanned(decodedText) {
     return;
   }
   
-  if (decodedText !== currentSession.id) {
-    console.warn('[QR] Code mismatch - expected:', currentSession.id, 'got:', decodedText);
+  if (scannedSessionId !== currentSession.id) {
+    console.warn('[QR] Code mismatch - expected:', currentSession.id, 'got:', scannedSessionId);
     showError('Invalid QR code. This code does not match the current session.');
     // Reopen scanner for retry
     setTimeout(() => {

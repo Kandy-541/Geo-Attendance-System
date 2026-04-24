@@ -39,7 +39,11 @@ export async function registerUser(email, password, name, role, speciality, leve
       role: role,
       name: name,
       email: email,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      // Credential recovery hints (secure - no actual password)
+      passwordLength: password.length,
+      accountCreated: serverTimestamp(),
+      emailDomain: email.split('@')[1]
     };
 
     // CRITICAL FIX: Add speciality and level for students

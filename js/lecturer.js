@@ -1,7 +1,7 @@
 // Lecturer dashboard logic with session management
 import { auth, db } from './firebase.js';
 import { logoutUser, getUserProfile } from './auth.js';
-import { generateQRCode, displayQRCodeWithText } from './qr.js';
+import { generateQRCode, displayQRCodeWithText, generateDynamicQRCode } from './qr.js';
 import {
   collection,
   addDoc,
@@ -21,6 +21,7 @@ let attendanceUnsubscribe = null;
 let currentViewUser = null;
 let allSessions = [];
 let lecturerInitialized = false;
+let qrRefreshInterval = null; // Timer for QR code refresh
 
 // Device and browser detection (same as student.js)
 const deviceInfo = {
@@ -620,6 +621,9 @@ function displaySessionUI(sessionId, duration) {
 
   displayQRCodeWithText(sessionId, 'qrCodeContainer', 'Scan to mark attendance');
 
+  // Start QR code refresh timer (every 5 seconds)
+  startQRRefreshTimer(sessionId);
+
   document.getElementById('sessionId').textContent = sessionId;
   document.getElementById('sessionStatus').textContent = 'Active';
   document.getElementById('sessionStatus').style.color = '#2d5016';
@@ -629,6 +633,27 @@ function displaySessionUI(sessionId, duration) {
   document.getElementById('endSessionBtn').onclick = async () => {
     await endSession();
   };
+}
+
+function startQRRefreshTimer(sessionId) {
+  // Clear any existing timer
+  if (qrRefreshInterval) {
+    clearInterval(qrRefreshInterval);
+  }
+
+  console.log('[QR Refresh] Starting QR code refresh timer for session:', sessionId);
+
+  // Set up timer to refresh QR code every 5 seconds
+  qrRefreshInterval = setInterval(() => {
+    // Find the QR container (it has an ID starting with 'qr-')
+    const qrContainer = document.querySelector('#qrCodeContainer div div[id^="qr-"]');
+    if (qrContainer) {
+      console.log('[QR Refresh] Refreshing QR code at', new Date().toLocaleTimeString());
+      generateDynamicQRCode(sessionId, qrContainer.id);
+    } else {
+      console.warn('[QR Refresh] QR container not found');
+    }
+  }, 5000); // 5000 milliseconds = 5 seconds
 }
 
 function startCountdownTimer(minutes) {
@@ -739,6 +764,12 @@ async function endSession() {
     const timerElement = document.getElementById('timerDisplay');
     if (timerElement.dataset.intervalId) {
       clearInterval(parseInt(timerElement.dataset.intervalId));
+    }
+
+    // Clear QR refresh timer
+    if (qrRefreshInterval) {
+      clearInterval(qrRefreshInterval);
+      qrRefreshInterval = null;
     }
 
     // Get final attendance count
