@@ -760,22 +760,48 @@ export { closeQRScannerInternal };
 async function handleQRCodeScanned(decodedText) {
   console.log('[QR] Handling scanned code:', decodedText);
   console.log('[QR] Current session ID:', currentSession?.id);
-  
-  // Extract session ID from dynamic QR code (format: sessionId-timestamp)
-  const scannedSessionId = decodedText.split('-')[0];
-  console.log('[QR] Extracted session ID from QR:', scannedSessionId);
-  
+
   // Validate that code matches current session
   if (!currentSession) {
     console.error('[QR] ERROR: currentSession is null');
     showError('No active session. Please refresh the page.');
     return;
   }
-  
+
+  // Parse dynamic QR code format: "sessionId-timestamp"
+  const parts = decodedText.split('-');
+  if (parts.length !== 2) {
+    console.warn('[QR] Invalid QR code format - expected sessionId-timestamp, got:', decodedText);
+    showError('Invalid QR code format. Please scan a valid code.');
+    setTimeout(() => {
+      console.log('[QR] Reopening scanner for retry');
+      openQRScanner();
+    }, 2000);
+    return;
+  }
+
+  const [scannedSessionId, timestampStr] = parts;
+  const scannedTimestamp = parseInt(timestampStr);
+
+  // Validate session ID
   if (scannedSessionId !== currentSession.id) {
-    console.warn('[QR] Code mismatch - expected:', currentSession.id, 'got:', scannedSessionId);
+    console.warn('[QR] Session ID mismatch - expected:', currentSession.id, 'got:', scannedSessionId);
     showError('Invalid QR code. This code does not match the current session.');
-    // Reopen scanner for retry
+    setTimeout(() => {
+      console.log('[QR] Reopening scanner for retry');
+      openQRScanner();
+    }, 2000);
+    return;
+  }
+
+  // Validate timestamp (allow up to 10 seconds old to account for processing delays)
+  const currentTime = Date.now();
+  const timeDifference = currentTime - scannedTimestamp;
+  const maxAge = 10000; // 10 seconds
+
+  if (timeDifference > maxAge) {
+    console.warn('[QR] QR code too old - age:', timeDifference, 'ms, max allowed:', maxAge, 'ms');
+    showError('QR code has expired. Please scan the current code.');
     setTimeout(() => {
       console.log('[QR] Reopening scanner for retry');
       openQRScanner();
@@ -791,14 +817,14 @@ async function handleQRCodeScanned(decodedText) {
       showError('Authentication error. Please refresh the page.');
       return;
     }
-    
+
     const profile = await getUserProfile(user.uid);
     if (!profile) {
       console.error('[QR] ERROR: User profile not found');
       showError('Profile error. Please refresh the page.');
       return;
     }
-    
+
     console.log('[QR] User profile found:', profile.name);
     await markAttendance(user, profile, 'QR');
     console.log('[QR] Attendance marked successfully');

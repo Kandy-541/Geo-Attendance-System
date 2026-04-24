@@ -50,7 +50,6 @@ export function displayQRCodeWithText(sessionId, elementId, displayText = null) 
 export function generateDynamicQRCode(sessionId, elementId) {
   // Create unique QR value using sessionId and current timestamp
   const qrText = `${sessionId}-${Date.now()}`;
-  console.log('[QR] Generating dynamic QR code:', qrText);
 
   // Clear existing QR code
   const element = document.getElementById(elementId);

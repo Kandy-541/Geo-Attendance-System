@@ -74,9 +74,7 @@
         </form>
 
         <p class="form-toggle">Don't have an account? <a href="#" onclick="toggleToSignup()">Sign Up</a></p>
-        <div class="forgot-credentials">
-          <a href="#" onclick="showForgotCredentialsModal()">Forgot your credentials?</a>
-        </div>
+
       </div>
 
       <!-- Signup Form -->
@@ -155,66 +153,6 @@
       <!-- Loading Overlay (for form submission) -->
       <div id="formLoadingSpinner" style="display: none;">
         <div class="spinner"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Credential Reminder Modal -->
-  <div id="credentialModal" class="modal" style="display: none;">
-    <div class="modal-content credential-modal">
-      <div class="modal-header">
-        <h2>🎉 Registration Successful!</h2>
-        <p class="modal-subtitle">Please save your login credentials securely</p>
-      </div>
-      
-      <div class="credential-info">
-        <div class="credential-item">
-          <label>Email:</label>
-          <div class="credential-value" id="reminderEmail"></div>
-        </div>
-        <div class="credential-item">
-          <label>Password:</label>
-          <div class="credential-value" id="reminderPassword"></div>
-        </div>
-      </div>
-      
-      <div class="credential-warning">
-        <p>⚠️ <strong>Important:</strong> Please save these credentials in a secure place. If you forget them, you can use the "Forgot Credentials" link on the login page to get hints.</p>
-      </div>
-      
-      <div class="modal-actions">
-        <button class="btn btn-primary" onclick="closeCredentialModal()">I have saved my credentials</button>
-        <button class="btn btn-secondary" onclick="copyCredentials()">Copy to Clipboard</button>
-      </div>
-      
-      <div class="auto-redirect">
-        <p>Auto-redirecting to dashboard in <span id="countdown">8</span> seconds...</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Forgot Credentials Modal -->
-  <div id="forgotCredentialsModal" class="modal" style="display: none;">
-    <div class="modal-content credential-modal">
-      <div class="modal-header">
-        <h2>Forgot Credentials</h2>
-        <p class="modal-subtitle">Get hints about your login information</p>
-      </div>
-      
-      <div class="credential-info">
-        <div class="form-group">
-          <label for="recoveryEmail">Enter your registered email:</label>
-          <input type="email" id="recoveryEmail" placeholder="your.email@example.com" required>
-        </div>
-      </div>
-      
-      <div class="credential-warning">
-        <p>⚠️ <strong>Note:</strong> For security reasons, we cannot send your full password. You'll receive hints about your credentials instead.</p>
-      </div>
-      
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeForgotCredentialsModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="sendCredentialHints()">Send Hints</button>
       </div>
     </div>
   </div>
@@ -353,15 +291,11 @@
 
         await registerUser(email, password, name, selectedRole, speciality, level);
         showFormLoading(false);
-        console.log('[Auth] Signup successful, showing credential reminder');
-        
-        // Show credential reminder before redirect
-        showCredentialReminder(email, password);
-        
-        // Redirect after showing credentials (delayed)
+        console.log('[Auth] Signup successful, redirecting to', selectedRole === 'student' ? '/student.html' : '/lecturer.html');
+        // Redirect immediately after successful signup
         setTimeout(() => {
           window.location.href = selectedRole === 'student' ? '/student.html' : '/lecturer.html';
-        }, 8000); // Give user time to note credentials
+        }, 500);
       } catch (error) {
         isTransitioning = false;
         showFormLoading(false);
@@ -390,81 +324,8 @@
       document.getElementById('loadingScreen').style.display = 'none';
     }
 
-    function showCredentialReminder(email, password) {
-      document.getElementById('reminderEmail').textContent = email;
-      document.getElementById('reminderPassword').textContent = password;
-      document.getElementById('credentialModal').style.display = 'flex';
-      
-      // Start countdown timer
-      let countdown = 8;
-      const countdownElement = document.getElementById('countdown');
-      const interval = setInterval(() => {
-        countdown--;
-        countdownElement.textContent = countdown;
-        if (countdown <= 0) {
-          clearInterval(interval);
-          closeCredentialModal();
-        }
-      }, 1000);
-    }
-
-    function closeCredentialModal() {
-      document.getElementById('credentialModal').style.display = 'none';
-    }
-
-    function showForgotCredentialsModal() {
-      document.getElementById('forgotCredentialsModal').style.display = 'flex';
-      document.getElementById('recoveryEmail').focus();
-    }
-
-    function closeForgotCredentialsModal() {
-      document.getElementById('forgotCredentialsModal').style.display = 'none';
-      document.getElementById('recoveryEmail').value = '';
-    }
-
-    async function sendCredentialHints() {
-      const email = document.getElementById('recoveryEmail').value.trim();
-      
-      if (!email) {
-        showError('Please enter your email address');
-        return;
-      }
-
-      try {
-        showFormLoading(true);
-        clearErrors();
-        
-        // Import required functions
-        const { getDoc, doc, collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-        
-        // Query users collection to find user by email
-        const usersQuery = query(collection(db, 'users'), where('email', '==', email));
-        const querySnapshot = await getDocs(usersQuery);
-        
-        if (querySnapshot.empty) {
-          throw new Error('No account found with this email address');
-        }
-
-        const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
-        
-        // Create credential hints using stored recovery information
-        const emailHint = `${email.substring(0, 3)}***@${userData.emailDomain || 'unknown'}`;
-        const passwordHint = `Password is ${userData.passwordLength || 'unknown'} characters long`;
-        const createdDate = userData.createdAt?.toDate?.() || new Date();
-        const accountHint = `Account created on ${createdDate.toLocaleDateString()}`;
-        
-        // In a real application, you would send this via email service
-        // For demo purposes, we'll show it in an alert
-        alert(`Credential Recovery Hints Sent!\n\n📧 Email: ${emailHint}\n🔒 Password: ${passwordHint}\n📅 ${accountHint}\n\n💡 Tip: Check if you saved your credentials during registration.\n\nA detailed recovery email has been sent to ${email}`);
-        
-        closeForgotCredentialsModal();
-        showFormLoading(false);
-        
-      } catch (error) {
-        showFormLoading(false);
-        showError(error.message || 'Failed to send credential hints');
-      }
+    function showAuthContainer() {
+      document.getElementById('authContainer').style.display = 'block';
     }
   </script>
 </body>

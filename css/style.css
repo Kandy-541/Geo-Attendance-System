@@ -1641,12 +1641,6 @@ input::placeholder {
     padding: 16px;
   }
   
-  .modal-actions .btn {
-    min-width: auto;
-  }
-}
-}
-
 /* Mobile (480px and down) */
 @media (max-width: 480px) {
   :root {

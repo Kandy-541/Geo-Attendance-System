@@ -21,7 +21,7 @@ let attendanceUnsubscribe = null;
 let currentViewUser = null;
 let allSessions = [];
 let lecturerInitialized = false;
-let qrRefreshInterval = null; // Timer for QR code refresh
+let qrRefreshInterval = null;
 
 // Device and browser detection (same as student.js)
 const deviceInfo = {
@@ -621,7 +621,7 @@ function displaySessionUI(sessionId, duration) {
 
   displayQRCodeWithText(sessionId, 'qrCodeContainer', 'Scan to mark attendance');
 
-  // Start QR code refresh timer (every 5 seconds)
+  // Start QR code refresh timer
   startQRRefreshTimer(sessionId);
 
   document.getElementById('sessionId').textContent = sessionId;
@@ -641,37 +641,37 @@ function startQRRefreshTimer(sessionId) {
     clearInterval(qrRefreshInterval);
   }
 
-  console.log('[QR Refresh] Starting QR code refresh timer for session:', sessionId);
-
-  // Set up timer to refresh QR code every 5 seconds
+  // Generate new QR code every 5 seconds
   qrRefreshInterval = setInterval(() => {
-    // Find the QR container (it has an ID starting with 'qr-')
-    const qrContainer = document.querySelector('#qrCodeContainer div div[id^="qr-"]');
+    const qrContainer = document.getElementById('qrCodeContainer');
     if (qrContainer) {
-      console.log('[QR Refresh] Refreshing QR code at', new Date().toLocaleTimeString());
-      generateDynamicQRCode(sessionId, qrContainer.id);
-    } else {
-      console.warn('[QR Refresh] QR container not found');
+      // Clear existing QR code
+      qrContainer.innerHTML = '';
+
+      // Create wrapper for QR and text
+      const wrapper = document.createElement('div');
+      wrapper.style.textAlign = 'center';
+
+      // Create QR code container
+      const qrElement = document.createElement('div');
+      qrElement.id = `qr-${Date.now()}`;
+      wrapper.appendChild(qrElement);
+
+      // Add text
+      const text = document.createElement('p');
+      text.textContent = 'Scan to mark attendance';
+      text.style.marginTop = '10px';
+      text.style.fontSize = '14px';
+      text.style.color = '#666';
+      wrapper.appendChild(text);
+
+      qrContainer.appendChild(wrapper);
+
+      // Generate new dynamic QR code
+      generateDynamicQRCode(sessionId, qrElement.id);
     }
-  }, 5000); // 5000 milliseconds = 5 seconds
+  }, 5000); // 5 seconds
 }
-
-function startCountdownTimer(minutes) {
-  let remaining = minutes * 60;
-  const timerElement = document.getElementById('timerDisplay');
-
-  const countdown = setInterval(() => {
-    const mins = Math.floor(remaining / 60);
-    const secs = remaining % 60;
-    timerElement.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-
-    remaining--;
-
-    if (remaining < 0) {
-      clearInterval(countdown);
-      endSession();
-    }
-  }, 1000);
 
   timerElement.dataset.intervalId = countdown;
 }
