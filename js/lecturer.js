@@ -239,6 +239,8 @@ function createSessionSidebarItem(session) {
   return item;
 }
 
+const timerElement = document.getElementById('timerDisplay');
+
 async function viewSessionDetails(session) {
   try {
     // Fetch attendance records for this session
@@ -760,7 +762,7 @@ async function endSession() {
 
     showLoading(true);
 
-    const timerElement = document.getElementById('timerDisplay');
+    
     if (timerElement.dataset.intervalId) {
       clearInterval(parseInt(timerElement.dataset.intervalId));
     }
