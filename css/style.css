@@ -172,7 +172,7 @@ input::placeholder {
 .auth-img{
   /* display: block; */
   padding-top: 20px;
-  padding-leftt: 1500px;
+  padding-left: 1500px;
   border-radius: 50%;
   display: center;
 }
@@ -2610,7 +2610,6 @@ input::placeholder {
   .card {
     border-radius: 8px;
   }
+  }
+ }
 }
-
-
-

@@ -674,7 +674,6 @@ function startQRRefreshTimer(sessionId) {
 }
 
   timerElement.dataset.intervalId = countdown;
-}
 
 let currentAttendanceData = [];
 
