@@ -271,18 +271,20 @@ async function viewSessionDetails(session) {
     attendanceList.innerHTML = '';
 
     if (attendanceRecords.length === 0) {
-      attendanceList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No attendance records</td></tr>';
+      attendanceList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">No attendance records</td></tr>';
     } else {
+      // FIX #3: Use correct loop variable "record" in the template (was "attendance")
+      // FIX #3b: Use pre-computed "timestamp" Date instead of "attendance.timestamp"
       attendanceRecords.forEach(record => {
         const row = document.createElement('tr');
         const timestamp = record.timestamp?.toDate?.() || new Date();
         row.innerHTML = `
-  <td>${attendance.name}</td>
-  <td>${attendance.level}</td>
-  <td>${attendance.speciality || '-'}</td>
-  <td>${attendance.method}</td>
-  <td>${attendance.timestamp.toLocaleTimeString()}</td>
-`;
+          <td>${record.name}</td>
+          <td>${record.level}</td>
+          <td>${record.speciality || '-'}</td>
+          <td>${record.method}</td>
+          <td>${timestamp.toLocaleTimeString()}</td>
+        `;
         attendanceList.appendChild(row);
       });
     }
@@ -558,7 +560,7 @@ async function createSession(user, radius, duration, latitude, longitude, qrOnly
       endTime: Timestamp.fromDate(endTime),
       latitude: latitude || null,
       longitude: longitude || null,
-      radius: Number(radius),  // ← Force convert to number
+      radius: Number(radius),
       active: true,
       geoEnabled: !qrOnly && latitude !== null,
       qrOnly: qrOnly,
@@ -572,23 +574,9 @@ async function createSession(user, radius, duration, latitude, longitude, qrOnly
       geoEnabled: sessionData.geoEnabled
     });
 
-    console.log("SESSION WRITE ATTEMPT", {
-      authUid: auth.currentUser.uid,
-      authUidType: typeof auth.currentUser.uid,
-      lecturerId: sessionData.lecturerId,
-      lecturerIdType: typeof sessionData.lecturerId,
-      radiusType: typeof sessionData.radius,
-      radiusValue: sessionData.radius,
-      geoEnabled: sessionData.geoEnabled,
-      qrOnly: sessionData.qrOnly,
-      sessionDataKeys: Object.keys(sessionData)
-    });
-
     const docRef = await addDoc(collection(db, 'sessions'), sessionData);
     console.log('[Lecturer] SESSION WRITE SUCCESS, ID:', docRef.id);
     const sessionId = docRef.id;
-    
-    console.log('[Lecturer] Session created with ID:', sessionId);
 
     // Add qrValue field
     await updateDoc(docRef, { qrValue: sessionId });
@@ -606,9 +594,7 @@ async function createSession(user, radius, duration, latitude, longitude, qrOnly
     showSuccess('Session started successfully!');
   } catch (error) {
     console.error('SESSION WRITE FAILED:', error.code, error.message);
-    console.error('[Lecturer] Full error:', error);
     showLoading(false);
-    // Only show user-friendly message, not technical errors
     showError('Failed to start session. Please check your settings and try again.');
   }
 }
@@ -621,18 +607,51 @@ function displaySessionUI(sessionId, duration) {
 
   displayQRCodeWithText(sessionId, 'qrCodeContainer', 'Scan to mark attendance');
 
-  // Start QR code refresh timer
+  // Start QR code refresh timer (10 seconds)
   startQRRefreshTimer(sessionId);
 
   document.getElementById('sessionId').textContent = sessionId;
   document.getElementById('sessionStatus').textContent = 'Active';
   document.getElementById('sessionStatus').style.color = '#2d5016';
 
+  // FIX #1 & #2: startCountdownTimer now exists and correctly stores the interval ID
   startCountdownTimer(duration);
 
   document.getElementById('endSessionBtn').onclick = async () => {
     await endSession();
   };
+}
+
+// FIX #1 & #2: This function was missing entirely — the orphaned
+// "timerElement.dataset.intervalId = countdown;" was a broken remnant of it.
+function startCountdownTimer(durationMinutes) {
+  const timerElement = document.getElementById('timerDisplay');
+  if (!timerElement) return;
+
+  let remainingSeconds = durationMinutes * 60;
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  timerElement.textContent = formatTime(remainingSeconds);
+
+  const countdown = setInterval(() => {
+    remainingSeconds--;
+    timerElement.textContent = formatTime(remainingSeconds);
+
+    if (remainingSeconds <= 0) {
+      clearInterval(countdown);
+      timerElement.textContent = '00:00';
+      // Auto-end session when timer hits zero
+      endSession();
+    }
+  }, 1000);
+
+  // Store interval ID so endSession() can clear it
+  timerElement.dataset.intervalId = countdown;
 }
 
 function startQRRefreshTimer(sessionId) {
@@ -641,7 +660,7 @@ function startQRRefreshTimer(sessionId) {
     clearInterval(qrRefreshInterval);
   }
 
-  // Generate new QR code every 5 seconds
+  // FIX #5: Refresh every 10 seconds (was 5000ms)
   qrRefreshInterval = setInterval(() => {
     const qrContainer = document.getElementById('qrCodeContainer');
     if (qrContainer) {
@@ -667,13 +686,11 @@ function startQRRefreshTimer(sessionId) {
 
       qrContainer.appendChild(wrapper);
 
-      // Generate new dynamic QR code
+      // Generate new dynamic QR code — same sessionId keeps it valid for this session
       generateDynamicQRCode(sessionId, qrElement.id);
     }
-  }, 5000); // 5 seconds
+  }, 10000); // 10 seconds
 }
-
-  timerElement.dataset.intervalId = countdown;
 
 let currentAttendanceData = [];
 
@@ -736,23 +753,24 @@ function displayAttendanceList(attendanceData) {
   attendanceList.innerHTML = '';
 
   if (attendanceData.length === 0) {
-    attendanceList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">Waiting for attendance...</td></tr>';
+    attendanceList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">Waiting for attendance...</td></tr>';
     return;
   }
 
+  // FIX #4: Use correct loop variable "attendance" in the template (was "record")
+  // FIX #4b: "timestamp" is already a Date from setupAttendanceListener processing
   attendanceData.forEach((attendance) => {
     const row = document.createElement('tr');
     row.innerHTML = `
-  <td>${record.name}</td>
-  <td>${record.level}</td>
-  <td>${record.speciality || '-'}</td>
-  <td>${record.method}</td>
-  <td>${timestamp.toLocaleTimeString()}</td>
-`;
+      <td>${attendance.name}</td>
+      <td>${attendance.level}</td>
+      <td>${attendance.speciality || '-'}</td>
+      <td>${attendance.method}</td>
+      <td>${attendance.timestamp.toLocaleTimeString()}</td>
+    `;
     attendanceList.appendChild(row);
   });
 }
-
 
 async function endSession() {
   try {
@@ -760,8 +778,9 @@ async function endSession() {
 
     showLoading(true);
 
+    // FIX #1: timerElement.dataset.intervalId is now correctly set by startCountdownTimer
     const timerElement = document.getElementById('timerDisplay');
-    if (timerElement.dataset.intervalId) {
+    if (timerElement && timerElement.dataset.intervalId) {
       clearInterval(parseInt(timerElement.dataset.intervalId));
     }
 
