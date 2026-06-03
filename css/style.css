@@ -178,7 +178,8 @@ input::placeholder {
 }
 
 html {
-  background: url('/assets/gradient-bg.webp');
+  /* background: url('/assets/gradient-bg.webp'); */
+  background-color: #0F172A;
   background-attachment: fixed;
   background-size: cover;
   background-repeat: no-repeat;
