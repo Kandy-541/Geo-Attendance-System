@@ -1342,6 +1342,17 @@ body {
   font-size: 12px;
   font-weight: 600;
   box-shadow: var(--shadow-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(190, 24, 93, 0.12);
 }
 
 .status-pill.success {
