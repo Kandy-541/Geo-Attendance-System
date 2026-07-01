@@ -1,10 +1,14 @@
 // Shared course utilities for both lecturer and student pages
 const courses = [
-  { code: 'GEO101', name: 'Geospatial Systems' },
+  { code: 'SWE404', name: 'Software Testing' },
   { code: 'CS101', name: 'Introduction to Computer Science' },
   { code: 'IT202', name: 'Networking Fundamentals' },
   { code: 'DBM205', name: 'Database Management' },
-  { code: 'ACC110', name: 'Accounting Basics' }
+  { code: 'ACC110', name: 'Accounting Basics' },
+  { code: 'MAT401', name: 'Engineering Statistics' },
+  { code: 'SWE606', name: 'Data Science' },
+  { code: 'ITS305', name: 'Cloud Computing' },
+  { code: 'ACC112', name: 'Accounting Basics II' }
 ];
 
 export function getAvailableCourses() {
