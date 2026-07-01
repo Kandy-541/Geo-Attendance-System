@@ -244,6 +244,7 @@
   <script type="module">
     import { initLecturerDashboard } from './js/lecturer.js';
     import { auth, db } from './js/firebase.js';
+    import { logoutUser } from './js/auth.js';
     import { getDoc, doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     let dashboardInitialized = false;
@@ -271,6 +272,7 @@
       
       if (!user) {
         console.log('[Lecturer] No user, redirecting');
+        await logoutUser();
         window.location.href = '/';
         return;
       }
@@ -282,7 +284,8 @@
         
         if (role === 'student') {
           console.log('[Lecturer] Wrong role, redirecting to student');
-          window.location.href = '/student.html';
+          await logoutUser();
+          window.location.href = '/';
           return;
         }
       } catch (error) {

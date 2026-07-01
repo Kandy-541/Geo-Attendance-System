@@ -158,7 +158,7 @@
 
   <script type="module">
     import { setupAuthListener } from './js/firebase.js';
-    import { loginUser, registerUser, verifyRoleMatch } from './js/auth.js';
+    import { loginUser, registerUser, verifyRoleMatch, logoutUser } from './js/auth.js';
 
     let selectedRole = null;
     let isTransitioning = false;
@@ -230,26 +230,30 @@
       
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
+
+      if (!selectedRole) {
+        isTransitioning = false;
+        showError('Please choose a role before signing in.');
+        return;
+      }
       
       try {
         showFormLoading(true);
         clearErrors();
         
-        // Login user
         const user = await loginUser(email, password);
-        
-        // Verify role matches selected role
         const roleMatches = await verifyRoleMatch(user.uid, selectedRole);
+
         if (!roleMatches) {
-          throw new Error(`This email is registered as a ${selectedRole === 'student' ? 'lecturer' : 'student'}. Please use the correct login option.`);
+          await logoutUser();
+          throw new Error(`This account is not registered as a ${selectedRole}. Please use the correct login option.`);
         }
 
         showFormLoading(false);
         console.log('[Auth] Login successful, redirecting to', selectedRole === 'student' ? '/student.html' : '/lecturer.html');
-        // Redirect immediately after successful login
         setTimeout(() => {
           window.location.href = selectedRole === 'student' ? '/student.html' : '/lecturer.html';
-        }, 500);
+        }, 400);
       } catch (error) {
         isTransitioning = false;
         showFormLoading(false);

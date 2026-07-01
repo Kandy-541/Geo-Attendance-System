@@ -33,6 +33,21 @@
   <div class="student-layout">
     <!-- Main Content -->
     <main class="student-main-content">
+      <section class="student-hero card">
+        <div class="student-hero-content">
+          <div>
+            <p class="student-hero-kicker">Attendance Dashboard</p>
+            <h2>Welcome back — stay on top of every class.</h2>
+            <p>Join live sessions, record attendance with geolocation or QR, and keep your attendance history organized in one polished dashboard.</p>
+          </div>
+          <div class="student-hero-badges">
+            <span class="status-pill success">Live</span>
+            <span class="status-pill">Geo + QR</span>
+            <span class="status-pill">History</span>
+          </div>
+        </div>
+      </section>
+
       <!-- No Active Session -->
       <div id="noSessionContainer" class="card" style="display: none;">
         <div class="no-session">
@@ -162,6 +177,7 @@
   <script type="module">
     import { initStudentDashboard, setupQRScanning } from './js/student.js';
     import { auth, db } from './js/firebase.js';
+    import { logoutUser } from './js/auth.js';
     import { getDoc, doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     let dashboardInitialized = false;
@@ -189,6 +205,7 @@
       
       if (!user) {
         console.log('[Student] No user, redirecting');
+        await logoutUser();
         window.location.href = '/';
         return;
       }
@@ -200,7 +217,8 @@
         
         if (role === 'lecturer') {
           console.log('[Student] Wrong role, redirecting to lecturer');
-          window.location.href = '/lecturer.html';
+          await logoutUser();
+          window.location.href = '/';
           return;
         }
       } catch (error) {
