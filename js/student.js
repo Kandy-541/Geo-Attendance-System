@@ -1,6 +1,7 @@
 // Student dashboard logic
 import { auth, db } from './firebase.js';
 import { logoutUser, getUserProfile } from './auth.js';
+import { formatCourseLabel } from './course.js';
 import {
   collection,
   addDoc,
@@ -506,6 +507,8 @@ async function markAttendance(user, userProfile, method) {
       name: userProfile.name,
       speciality: userProfile.speciality,
       level: userProfile.level,
+      courseCode: currentSession.courseCode || null,
+      courseName: currentSession.courseName || null,
       timestamp: serverTimestamp(),
       method: method
     };
@@ -887,7 +890,7 @@ function showGeoattendanceUI(user, userProfile) {
   document.getElementById('attendanceRecordedContainer').style.display = 'none';
 
   document.getElementById('sessionIdGeo').textContent = currentSession.id;
-  document.getElementById('lecturerNameGeo').textContent = currentSession.lecturerName;
+    document.getElementById('sessionCourseGeo').textContent = formatCourseLabel({ code: currentSession.courseCode, name: currentSession.courseName });
 
   // Setup START ATTENDANCE button to trigger geolocation on user click
   const startGeoBtn = document.getElementById('startAttendanceBtn');
@@ -937,6 +940,7 @@ function showQROnlyUI() {
   document.getElementById('attendanceRecordedContainer').style.display = 'none';
 
   document.getElementById('sessionIdQR').textContent = currentSession.id;
+  document.getElementById('sessionCourseQR').textContent = formatCourseLabel({ code: currentSession.courseCode, name: currentSession.courseName });
   document.getElementById('lecturerNameQR').textContent = currentSession.lecturerName;
 
   setupQRScanning();
@@ -1086,6 +1090,7 @@ function createAttendanceHistoryItem(record) {
   const timestamp = record.timestamp?.toDate?.() || new Date();
   const lecturerName = record.session?.lecturerName || 'Unknown Lecturer';
   const method = record.method || 'Unknown';
+  const courseLabel = formatCourseLabel({ code: record.courseCode, name: record.courseName });
 
   item.innerHTML = `
     <div class="history-item-content">
@@ -1094,6 +1099,7 @@ function createAttendanceHistoryItem(record) {
       </div>
       <div class="history-item-details">
         <small>${timestamp.toLocaleDateString()}</small>
+        <span>${courseLabel}</span>
         <span class="history-item-method">${method}</span>
       </div>
     </div>

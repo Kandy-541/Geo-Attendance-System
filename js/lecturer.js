@@ -2,6 +2,7 @@
 import { auth, db } from './firebase.js';
 import { logoutUser, getUserProfile } from './auth.js';
 import { generateQRCode, displayQRCodeWithText, generateDynamicQRCode } from './qr.js';
+import { populateCourseSelect, getCourseByCode, formatCourseLabel } from './course.js';
 import {
   collection,
   addDoc,
@@ -87,7 +88,8 @@ export async function initLecturerDashboard() {
   // Setup navigation
   setupNavigation();
 
-  // Set up form handlers
+  // Populate course selection and set up form handlers
+  populateCourseSelect('courseSelect');
   setupFormHandlers(user);
 
   // Load sessions
@@ -208,7 +210,7 @@ function createSessionCard(session) {
       </div>
     </div>
     <div class="session-card-info">
-      <p>Radius: <strong>${session.radius}m</strong></p>
+      <p>Course: <strong>${session.courseCode || 'N/A'}</strong></p>
       <p>Type: <strong>${session.geoEnabled ? 'Geolocation' : 'QR Only'}</strong></p>
       <p>Attended: <span class="session-card-count">${attendanceCount}</span> students</p>
     </div>
@@ -228,13 +230,8 @@ function createSessionSidebarItem(session) {
 
   item.innerHTML = `
     <strong>${startDate.toLocaleDateString()}</strong><br>
-    <small>${attendanceCount} students</small>
+    <small>${session.courseCode || 'No course'} — ${attendanceCount} students</small>
   `;
-
-  item.addEventListener('click', (e) => {
-    e.stopPropagation();
-    viewSessionDetails(session);
-  });
 
   return item;
 }
@@ -259,6 +256,7 @@ async function viewSessionDetails(session) {
     
     document.getElementById('detailsSessionId').textContent = session.id;
     document.getElementById('detailsSessionDate').textContent = startDate.toLocaleString();
+    document.getElementById('detailsSessionCourse').textContent = `${session.courseCode || '-'} — ${session.courseName || '-'}`;
     document.getElementById('detailsAttendanceCount').textContent = attendanceRecords.length;
 
     // Display QR code
@@ -406,6 +404,7 @@ function setupFormHandlers(user) {
     // Get and validate radius and duration as numbers
     const radius = Number(document.getElementById('radiusInput').value);
     const duration = Number(document.getElementById('durationInput').value);
+    const courseCode = document.getElementById('courseSelect').value;
 
     if (isNaN(radius) || radius <= 0) {
       showError('Please enter a valid radius');
@@ -417,8 +416,15 @@ function setupFormHandlers(user) {
       return;
     }
 
+    if (!courseCode) {
+      showError('Please select a course for this session');
+      return;
+    }
+
+    const courseInfo = getCourseByCode(courseCode);
+
     // Continue with geolocation request and session creation
-    requestLocation(user, radius, duration);
+    requestLocation(user, radius, duration, courseInfo);
   });
 }
 
@@ -438,63 +444,59 @@ async function checkGeoPermission() {
   }
 }
 
-function requestLocation(user, radius, duration) {
+function requestLocation(user, radius, duration, courseInfo) {
   showLoading(true);
 
   if (!navigator.geolocation) {
     console.error('[Lecturer Geo] Geolocation NOT SUPPORTED by browser');
     showLoading(false);
     showError('Geolocation is not supported by your browser. Using QR-only mode.');
-    // Automatically create QR-only session
-    createSession(user, radius, duration, null, null, true);
+    createSession(user, radius, duration, courseInfo, null, null, true);
     return;
   }
 
   console.log('[Lecturer Geo] Browser supports geolocation, checking permission state...');
-  
-  // Check permission before requesting
+
   checkGeoPermission().then((permissionState) => {
     console.log('[Lecturer Geo] Permission state before request:', permissionState);
-    
+
     if (permissionState === 'denied') {
       console.warn('[Lecturer Geo] Geolocation permission previously denied');
       showLoading(false);
       showLocationErrorModal(
         'Location permission denied. Enable location in browser settings.',
         () => {
-          createSession(user, radius, duration, null, null, true);
+          createSession(user, radius, duration, courseInfo, null, null, true);
         }
       );
       return;
     }
-    
-    // Optimal geolocation options for iOS reliability
+
     const geoOptions = {
-      enableHighAccuracy: true,  // REQUIRED for iOS to activate GPS hardware
-      timeout: 20000,            // Allow cold start (up to 20 seconds)
-      maximumAge: 0              // Force fresh reading, do NOT use cached
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0
     };
-    
+
     console.log('[Lecturer Geo] Requesting position with optimized options');
-    
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         showLoading(false);
         console.log('[Lecturer Geo] Position obtained successfully');
         const { latitude, longitude } = position.coords;
-        createSession(user, radius, duration, latitude, longitude, false);
+        createSession(user, radius, duration, courseInfo, latitude, longitude, false);
       },
       (error) => {
         showLoading(false);
         console.error('[Lecturer Geo] Geolocation error code:', error.code, 'Message:', error.message);
-        
-        // Differentiated error handling
+
         if (error.code === error.PERMISSION_DENIED) {
           console.error('[Lecturer Geo] PERMISSION_DENIED');
           showLocationErrorModal(
             'Location permission denied. Enable location in browser settings.',
             () => {
-              createSession(user, radius, duration, null, null, true);
+              createSession(user, radius, duration, courseInfo, null, null, true);
             }
           );
         } else if (error.code === error.POSITION_UNAVAILABLE) {
@@ -502,7 +504,7 @@ function requestLocation(user, radius, duration) {
           showLocationErrorModal(
             'Location unavailable. Move outdoors or enable Precise Location.',
             () => {
-              createSession(user, radius, duration, null, null, true);
+              createSession(user, radius, duration, courseInfo, null, null, true);
             }
           );
         } else if (error.code === error.TIMEOUT) {
@@ -510,7 +512,7 @@ function requestLocation(user, radius, duration) {
           showLocationErrorModal(
             'Location request timed out. Retry or continue with QR.',
             () => {
-              createSession(user, radius, duration, null, null, true);
+              createSession(user, radius, duration, courseInfo, null, null, true);
             }
           );
         } else {
@@ -518,7 +520,7 @@ function requestLocation(user, radius, duration) {
           showLocationErrorModal(
             'Unexpected location error. Using QR code mode.',
             () => {
-              createSession(user, radius, duration, null, null, true);
+              createSession(user, radius, duration, courseInfo, null, null, true);
             }
           );
         }
@@ -531,15 +533,15 @@ function requestLocation(user, radius, duration) {
     showLocationErrorModal(
       'Could not verify location permission. Continuing...',
       () => {
-        createSession(user, radius, duration, null, null, true);
+        createSession(user, radius, duration, courseInfo, null, null, true);
       }
     );
   });
 }
 
-async function createSession(user, radius, duration, latitude, longitude, qrOnly) {
+async function createSession(user, radius, duration, courseInfo, latitude, longitude, qrOnly) {
   try {
-    console.log('[Lecturer] Creating session - Radius:', radius, 'Duration:', duration, 'QR-only:', qrOnly);
+    console.log('[Lecturer] Creating session - Radius:', radius, 'Duration:', duration, 'QR-only:', qrOnly, 'Course:', courseInfo);
     showLoading(true);
 
     const endTime = new Date();
@@ -556,6 +558,8 @@ async function createSession(user, radius, duration, latitude, longitude, qrOnly
     const sessionData = {
       lecturerId: user.uid,
       lecturerName: userProfile.name || 'Unknown',
+      courseCode: courseInfo?.code || null,
+      courseName: courseInfo?.name || null,
       startTime: serverTimestamp(),
       endTime: Timestamp.fromDate(endTime),
       latitude: latitude || null,

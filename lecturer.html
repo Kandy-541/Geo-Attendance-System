@@ -75,6 +75,13 @@
               <small>Range: 1-450 minutes</small>
             </div>
 
+            <div class="form-group">
+              <label for="courseSelect">Course:</label>
+              <select id="courseSelect" required>
+                <option value="">Select course</option>
+              </select>
+            </div>
+
             <button type="submit" class="btn btn-primary">Start Session</button>
           </form>
 
@@ -161,6 +168,7 @@
             <div>
               <h2>Session Details</h2>
               <p>Session ID: <span id="detailsSessionId">-</span></p>
+              <p>Course: <span id="detailsSessionCourse">-</span></p>
               <p>Date: <span id="detailsSessionDate">-</span></p>
               <p>Attended: <span id="detailsAttendanceCount">0</span> students</p>
             </div>
