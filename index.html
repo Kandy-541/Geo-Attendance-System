@@ -272,7 +272,7 @@
       const password = document.getElementById('signupPassword').value;
       const confirmPassword = document.getElementById('signupConfirmPassword').value;
       const name = document.getElementById('signupName').value.trim();
-      const speciality = selectedRole === 'student' ? document.getElementById('signupSpeciality').value : null ;
+      const speciality = selectedRole === 'student' ? document.getElementById('signupSpeciality').value : null;
       const level = selectedRole === 'student' ? document.getElementById('signupLevel').value : null;
       
       try {
@@ -288,7 +288,7 @@
         }
         
         if (selectedRole === 'student' && !level) {
-          throw new Error('Please select your level');
+          throw new Error('Please enter your level');
         }
 
 
