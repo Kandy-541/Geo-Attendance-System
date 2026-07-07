@@ -79,7 +79,7 @@ export async function initStudentDashboard() {
   console.log('[Student] Profile loaded:', userProfile.name);
   document.getElementById('studentName').textContent = userProfile.name;
   document.getElementById('studentLevel').textContent = userProfile.level;
-  document.getElementById('studentSpeciality').textContent = userProfile.speciality;
+  // document.getElementById('studentSpeciality').textContent = userProfile.speciality;
 
   // Set up logout - RESET MODULE STATE for next login
   document.getElementById('logoutBtn').addEventListener('click', async () => {
