@@ -78,6 +78,7 @@ export async function initLecturerDashboard() {
 
   console.log('[Lecturer] Profile loaded:', userProfile.name);
   document.getElementById('lecturerName').textContent = userProfile.name;
+  
 
   // Set up logout
   document.getElementById('logoutBtn').addEventListener('click', async () => {
